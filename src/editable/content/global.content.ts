@@ -3,34 +3,35 @@ import { slot4BrandConfig } from '@/editable/theme/brand.config'
 export const globalContent = {
   site: {
     name: slot4BrandConfig.siteName,
-    tagline: slot4BrandConfig.tagline || 'Independent reading platform',
+    tagline: slot4BrandConfig.tagline || 'Bookmarks & business directory',
     domain: slot4BrandConfig.domain,
     baseUrl: slot4BrandConfig.baseUrl,
   },
   nav: {
-    tagline: 'Independent reading platform',
+    tagline: 'Bookmarks & directory',
     primaryLinks: [
-      { label: 'Articles', href: '/articles' },
-      { label: 'Visuals', href: '/image-sharing' },
-      { label: 'Listings', href: '/listings' },
+      { label: 'Collections', href: '/sbm' },
+      { label: 'Directory', href: '/listing' },
+      { label: 'Search', href: '/search' },
       { label: 'Contact', href: '/contact' },
     ],
     actions: {
       primary: { label: 'Start exploring', href: '/' },
-      secondary: { label: 'Submit', href: '/contact' },
+      secondary: { label: 'Add a listing', href: '/create' },
     },
   },
   footer: {
-    tagline: 'Stories, resources, and discoverable posts',
-    description: 'A connected publishing surface for articles, visuals, listings, profiles, bookmarks, and downloadable resources.',
+    tagline: 'Curated links and a living business directory',
+    description:
+      'Save and discover curated links, resources and collections — and browse a directory of businesses, services and places worth knowing about.',
     columns: [
       {
         title: 'Explore',
         links: [
-          { label: 'Articles', href: '/articles' },
-          { label: 'Listings', href: '/listings' },
-          { label: 'Images', href: '/image-sharing' },
-          { label: 'PDF Library', href: '/pdf' },
+          { label: 'Collections', href: '/sbm' },
+          { label: 'Bookmarks', href: '/sbm' },
+          { label: 'Directory', href: '/listing' },
+          { label: 'Search', href: '/search' },
         ],
       },
       {
@@ -41,7 +42,7 @@ export const globalContent = {
         ],
       },
     ],
-    bottomNote: 'Built for clean discovery and connected publishing.',
+    bottomNote: 'Curated bookmarks & a living business directory.',
   },
   commonLabels: {
     readMore: 'Read more',
@@ -49,6 +50,6 @@ export const globalContent = {
     explore: 'Explore',
     latest: 'Latest',
     related: 'Related',
-    published: 'Published',
+    published: 'Added',
   },
 } as const

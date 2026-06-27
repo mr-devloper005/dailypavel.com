@@ -1,53 +1,43 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-
 /*
-  Auto-rotating image collage for the home hero. Tiles the latest posts'
-  images into a responsive grid and crossfades each cell through the pool on a
-  staggered timer, so the hero feels alive without being distracting.
-  Server render is deterministic (tick = 0) → no hydration mismatch. Rotation
-  is disabled for prefers-reduced-motion users.
+  Cyrclo-style hero backdrop: the latest posts' images arranged as a ring of
+  tiles slowly orbiting the centered wordmark. The whole ring rotates; each
+  tile counter-rotates so images stay near-upright. Deterministic placement →
+  no hydration mismatch. Rotation is paused for prefers-reduced-motion users
+  (handled in editable-global.css).
 */
 export function EditableHeroCollage({ images }: { images: string[] }) {
-  const pool = images.length ? images : ['/placeholder.svg?height=900&width=1400']
-  // Keep tiles big: at most a 2x2 collage so each image reads large in the hero.
-  const cellCount = pool.length >= 4 ? 4 : pool.length >= 2 ? 2 : 1
-  const [tick, setTick] = useState(0)
+  const pool = images.length ? images : ['/placeholder.svg?height=480&width=480']
+  const TILES = 16
+  const RADIUS = 322
 
-  useEffect(() => {
-    if (pool.length <= 1) return
-    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-    const id = setInterval(() => setTick((value) => value + 1), 4200)
-    return () => clearInterval(id)
-  }, [pool.length])
-
-  const gridClass =
-    cellCount === 4
-      ? 'grid-cols-2 grid-rows-2'
-      : cellCount === 2
-      ? 'grid-cols-2 grid-rows-1'
-      : 'grid-cols-1 grid-rows-1'
+  const tiles = Array.from({ length: TILES }, (_, i) => {
+    const angle = (360 / TILES) * i
+    // Deterministic per-tile tilt for a hand-scattered feel.
+    const jitter = ((i * 53) % 15) - 7
+    return { angle, jitter, src: pool[i % pool.length] }
+  })
 
   return (
-    <div className={`absolute inset-0 grid ${gridClass}`} aria-hidden="true">
-      {Array.from({ length: cellCount }).map((_, cell) => {
-        const activeIndex = (cell + tick) % pool.length
-        return (
-          <div key={cell} className="relative overflow-hidden bg-[var(--slot4-media-bg)]">
-            {pool.map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt=""
-                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms] ease-in-out ${i === activeIndex ? 'opacity-100' : 'opacity-0'}`}
-                loading={cell === 0 && i === 0 ? 'eager' : 'lazy'}
-                {...(cell === 0 && i === 0 ? { fetchPriority: 'high' as const } : {})}
-              />
-            ))}
-          </div>
-        )
-      })}
+    <div className="absolute inset-0 flex items-center justify-center overflow-hidden" aria-hidden="true">
+      <div className="relative h-[720px] w-[720px] scale-[0.6] sm:scale-[0.78] lg:scale-100">
+        <div className="editable-orbit absolute inset-0">
+          {tiles.map((tile, i) => (
+            <div
+              key={i}
+              className="absolute left-1/2 top-1/2"
+              style={{ transform: `translate(-50%, -50%) rotate(${tile.angle}deg) translateY(-${RADIUS}px) rotate(${-tile.angle}deg)` }}
+            >
+              <div className="editable-orbit-tile">
+                <div style={{ transform: `rotate(${tile.jitter}deg)` }}>
+                  <div className="h-[104px] w-[104px] overflow-hidden rounded-[1.25rem] border border-white/10 bg-[var(--slot4-media-bg)] shadow-[0_14px_36px_rgba(0,0,0,0.7)] sm:h-[120px] sm:w-[120px]">
+                    <img src={tile.src} alt="" className="h-full w-full object-cover opacity-90" loading={i < 5 ? 'eager' : 'lazy'} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

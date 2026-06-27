@@ -44,7 +44,7 @@ export function EditorialFeatureCard({ post, href, label = 'Featured read' }: { 
           <span className={`${dc.type.eyebrow} ${pal.accentSoftText}`}>{label}</span>
           <h3 className="mt-5 max-w-3xl text-4xl font-black leading-[0.95] tracking-[-0.07em] sm:text-5xl lg:text-6xl">{post.title}</h3>
           <p className="mt-5 max-w-2xl text-sm leading-8 text-white/75 sm:text-base">{getEditableExcerpt(post, 190)}</p>
-          <span className={`mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold ${pal.panelText}`}>
+          <span className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-[var(--slot4-accent-fill)] px-5 py-3 text-sm font-bold text-[var(--slot4-on-accent)]">
             Read story <ArrowRight className="h-4 w-4" />
           </span>
         </div>

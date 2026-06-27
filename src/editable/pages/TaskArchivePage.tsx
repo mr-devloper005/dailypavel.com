@@ -1,5 +1,7 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { ArrowUpRight, BriefcaseBusiness, ChevronDown, Download, FileText, Globe, MapPin, Phone, Search, Star, UserRound } from 'lucide-react'
+import { Ads } from '@/lib/ads'
 import { buildTaskMetadata } from '@/lib/seo'
 import { CATEGORY_OPTIONS, normalizeCategory } from '@/lib/categories'
 import { fetchPaginatedTaskPosts, buildPostUrl } from '@/lib/task-data'
@@ -66,7 +68,7 @@ const taskGrid: Record<TaskKey, string> = {
 }
 
 // Shared premium surface: hairline border, soft radius, smooth lift on hover.
-const cardBase = 'group block rounded-[var(--tk-radius)] border border-[var(--tk-line)] bg-[var(--tk-surface)] transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_32px_72px_rgba(15,23,42,0.14)]'
+const cardBase = 'group block rounded-[var(--tk-radius)] border border-[var(--tk-line)] bg-[var(--tk-surface)] transition duration-500 hover:-translate-y-1.5 hover:border-[var(--tk-accent)]/40 hover:shadow-[0_28px_72px_rgba(0,0,0,0.6)]'
 
 export async function EditableTaskArchiveRoute({
   task,
@@ -116,7 +118,18 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
               </div>
             ) : null}
 
-            <div className="mt-12 flex flex-col gap-4 border-t border-[var(--tk-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <form action="/search" className="mt-10 flex w-full max-w-xl items-center gap-2 rounded-full border border-[var(--tk-line)] bg-[var(--tk-surface)] p-2 pl-5">
+              <input type="hidden" name="task" value={task} />
+              <Search className="h-5 w-5 shrink-0 text-[var(--tk-accent)]" />
+              <input
+                name="q"
+                placeholder={`Search ${label.toLowerCase()}…`}
+                className="w-full bg-transparent py-2 text-sm text-[var(--tk-text)] outline-none placeholder:text-[var(--tk-muted)]"
+              />
+              <button className="shrink-0 rounded-full bg-[var(--tk-accent)] px-5 py-2 text-sm font-semibold text-[var(--tk-on-accent)] transition hover:brightness-110">Search</button>
+            </form>
+
+            <div className="mt-10 flex flex-col gap-4 border-t border-[var(--tk-line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-[var(--tk-muted)]">
                 <span className="font-semibold text-[var(--tk-text)]">{posts.length}</span> {posts.length === 1 ? 'post' : 'posts'} · {categoryLabel}
               </p>
@@ -140,10 +153,36 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
         </header>
 
         <section className="mx-auto max-w-[var(--editable-container)] px-6 py-16 sm:py-20 lg:px-8">
-          {posts.length ? (
-            <div className={taskGrid[task]}>
-              {posts.map((post, index) => <ArchivePostCard key={post.id || post.slug} post={post} task={task} basePath={basePath} index={index} />)}
+          {posts.length && page === 1 ? (
+            <div className="mb-10" data-reveal>
+              <FeaturedArchiveCard post={posts[0]} task={task} basePath={basePath} />
             </div>
+          ) : null}
+          {posts.length ? (
+            (() => {
+              const feedPosts = page === 1 ? posts.slice(1) : posts
+              // In-feed ad for the Business Listing + Social Bookmarking feeds:
+              // a full-width row after the 6th card (or after the last card on
+              // short feeds), so it reads as part of the grid.
+              const inFeedAd = task === 'listing' || task === 'sbm'
+              const adIndex = inFeedAd && feedPosts.length ? Math.min(5, feedPosts.length - 1) : -1
+              return (
+                <div className={taskGrid[task]}>
+                  {feedPosts.map((post, index) => (
+                    <Fragment key={post.id || post.slug}>
+                      <div data-reveal style={{ ['--reveal-delay' as string]: `${(index % 6) * 50}ms` }} className={task === 'image' ? 'break-inside-avoid' : ''}>
+                        <ArchivePostCard post={post} task={task} basePath={basePath} index={page === 1 ? index + 1 : index} />
+                      </div>
+                      {index === adIndex ? (
+                        <div className="col-span-full my-2">
+                          <Ads slot="in-feed" showLabel className="mx-auto w-full" />
+                        </div>
+                      ) : null}
+                    </Fragment>
+                  ))}
+                </div>
+              )
+            })()
           ) : (
             <div className="mx-auto max-w-xl rounded-[var(--tk-radius)] border border-dashed border-[var(--tk-line)] bg-[var(--tk-surface)] px-8 py-16 text-center">
               <Search className="mx-auto h-7 w-7 text-[var(--tk-muted)]" />
@@ -162,6 +201,46 @@ export function TaskArchiveView({ task, posts, pagination, category, basePath }:
         </section>
       </main>
     </EditableSiteShell>
+  )
+}
+
+// Wide, premium "featured" banner shown atop page 1 of each archive.
+function FeaturedArchiveCard({ post, task, basePath }: { post: SitePost; task: TaskKey; basePath: string }) {
+  const href = `${basePath}/${post.slug}`
+  const image = getImage(post)
+  const category = getCategory(post, getTaskTheme(task).kicker)
+  const summary = getSummary(post)
+  const location = getField(post, ['location', 'address', 'city'])
+  const website = getField(post, ['website', 'url', 'link'])
+  const isBookmark = task === 'sbm'
+  const cta = isBookmark ? 'Open resource' : task === 'listing' ? 'View listing' : 'Open post'
+
+  return (
+    <Link href={href} className="group grid overflow-hidden rounded-[var(--tk-radius)] border border-[var(--tk-line)] bg-[var(--tk-surface)] transition duration-500 hover:border-[var(--tk-accent)]/40 hover:shadow-[0_28px_80px_rgba(0,0,0,0.6)] lg:grid-cols-2">
+      <div className="relative min-h-[240px] overflow-hidden bg-[var(--tk-raised)]">
+        {isBookmark && (!image || image.includes('placeholder')) ? (
+          <div className="flex h-full min-h-[240px] items-center justify-center bg-[linear-gradient(135deg,var(--tk-accent-soft),transparent)]">
+            <Globe className="h-16 w-16 text-[var(--tk-accent)] opacity-70" />
+          </div>
+        ) : (
+          <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" />
+        )}
+        <span className="absolute left-5 top-5 rounded-full border border-white/10 bg-[var(--tk-bg)]/80 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--tk-accent)] backdrop-blur">Featured</span>
+      </div>
+      <div className="flex flex-col justify-center p-7 sm:p-10">
+        <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--tk-accent)]">{category}</p>
+        <h2 className="editable-display mt-3 text-3xl font-semibold leading-tight tracking-[-0.02em] sm:text-4xl">{post.title}</h2>
+        {!isBookmark ? <RatingLine post={post} /> : null}
+        {summary ? <p className="mt-4 line-clamp-3 text-[15px] leading-7 text-[var(--tk-muted)]">{summary}</p> : null}
+        <div className="mt-5 flex flex-wrap gap-4 text-xs font-medium text-[var(--tk-muted)]">
+          {location ? <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-[var(--tk-accent)]" /> {location}</span> : null}
+          {website ? <span className="inline-flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-[var(--tk-accent)]" /> {cleanDomain(website)}</span> : null}
+        </div>
+        <span className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-[var(--tk-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--tk-on-accent)] transition group-hover:brightness-110">
+          {cta} <ArrowUpRight className="h-4 w-4" />
+        </span>
+      </div>
+    </Link>
   )
 }
 
