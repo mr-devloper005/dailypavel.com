@@ -8,25 +8,30 @@
   - Selection color
   - Scrollbar feel
   - Article body typography accents
+  - Fail-safe scroll-reveal motion utilities
 
   Do not add data fetching, scripts, or route logic here.
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 /* Per-task display + body typefaces (consumed via task-themes.ts). */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=Syne:wght@500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Syne:wght@500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 
 body {
   background-color: var(--slot4-page-bg) !important;
   color: var(--slot4-page-text) !important;
   background-image: var(--slot4-body-gradient) !important;
+  /* Layer order matches --slot4-body-gradient: faint dot grid, then top glow. */
+  background-size: 24px 24px, 100% 100%;
+  background-position: 0 0, center top;
+  background-repeat: repeat, no-repeat;
+  background-attachment: fixed;
 }
 
 .editable-site-root {
-  /* Yelp-style clean sans, used for both display and body. */
-  --editable-font-display: 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  /* Premium dark "Cyrclo-style" type: geometric display, clean sans body. */
+  --editable-font-display: 'Space Grotesk', 'Sora', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
   --editable-font-body: 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
   /* Premium easing curve used across every hover + transition. */
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
@@ -65,9 +70,70 @@ body {
   will-change: transform, opacity;
 }
 
+/*
+  Scroll reveal — fail-safe.
+
+  Content is ALWAYS visible by default. Only when JS adds `data-reveal-ready`
+  to <html> do we arm the hidden→shown transition, so nothing ever stays
+  invisible if JS is disabled or hydration is interrupted.
+*/
+[data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+[data-reveal-ready] [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  transition: opacity 0.7s var(--ease-premium), transform 0.7s var(--ease-premium);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: transform, opacity;
+}
+[data-reveal-ready] [data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Cyrclo-style hero: a slowly rotating ring of image tiles orbiting the
+   centered wordmark, plus a spinning "keep scrolling" badge. */
+@keyframes editable-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes editable-orbit-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes editable-spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.editable-orbit {
+  animation: editable-orbit 90s linear infinite;
+}
+.editable-orbit-tile {
+  /* counter-rotate each tile so images stay near-upright as the ring turns */
+  animation: editable-orbit-reverse 90s linear infinite;
+}
+.editable-spin-slow {
+  animation: editable-spin-slow 22s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .editable-enter > * {
     animation: none;
+  }
+  .editable-orbit,
+  .editable-orbit-tile,
+  .editable-spin-slow {
+    animation: none !important;
+  }
+  [data-reveal-ready] [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
   .editable-site-root *,
   .editable-site-root *::before,
@@ -97,12 +163,17 @@ body {
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--slot4-accent-fill) 28%, transparent);
-  color: var(--slot4-page-text);
+  background: color-mix(in oklab, var(--slot4-accent-fill) 32%, transparent);
+  color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: color-mix(in oklab, var(--slot4-page-bg) 88%, black);
+  background: color-mix(in oklab, var(--slot4-page-bg) 80%, black);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -111,13 +182,19 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklab, var(--slot4-accent) 68%, transparent);
+  background: color-mix(in oklab, var(--slot4-accent) 72%, transparent);
 }
 
-.article-content h2 {
-  color: var(--slot4-accent);
+.article-content h2,
+.article-content h3 {
+  color: var(--slot4-page-text);
 }
 
 .article-content a {
   color: var(--slot4-accent-fill);
+  text-underline-offset: 3px;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
 }

@@ -58,9 +58,9 @@ export default function ContactPage() {
             <h1 className="editable-display mt-4 text-5xl font-semibold tracking-[-0.02em]">{pagesContent.contact.title}</h1>
             <p className={`mt-5 max-w-2xl text-sm leading-8 ${tone.muted}`}>{pagesContent.contact.description}</p>
             <div className="mt-8 space-y-4">
-              {lanes.map((lane) => (
-                <div key={lane.title} className={`rounded-sm p-5 ${tone.soft}`}>
-                  <lane.icon className="h-5 w-5 text-[var(--slot4-accent)]" />
+              {lanes.map((lane, i) => (
+                <div key={lane.title} data-reveal style={{ ['--reveal-delay' as string]: `${i * 70}ms` }} className={`rounded-2xl p-5 transition duration-300 hover:border-[var(--slot4-accent)]/40 ${tone.soft}`}>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--slot4-accent-soft)] text-[var(--slot4-accent)] ring-1 ring-inset ring-[var(--slot4-accent)]/20"><lane.icon className="h-5 w-5" /></span>
                   <h2 className="editable-display mt-3 text-xl font-semibold">{lane.title}</h2>
                   <p className={`mt-2 text-sm leading-7 ${tone.muted}`}>{lane.body}</p>
                 </div>
@@ -68,7 +68,7 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div className={`rounded-sm p-7 ${tone.panel}`}>
+          <div data-reveal className={`rounded-2xl p-7 shadow-[0_28px_80px_rgba(0,0,0,0.45)] ${tone.panel}`}>
             <h2 className="editable-display text-2xl font-semibold">{pagesContent.contact.formTitle}</h2>
             <EditableContactLeadForm />
           </div>
